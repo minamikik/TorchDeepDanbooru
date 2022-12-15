@@ -11,84 +11,93 @@ re_special = re.compile(r'([\\()])')
 
 class DeepDanbooru:
     def __init__(self, model_path, half=True, gpu_id=0, image_size=512):
-        self.model_path = model_path
-        self.half = half
-        self.gpu_id = gpu_id
-        self.image_size = image_size
+        try:
+            self.model_path = model_path
+            self.half = half
+            self.gpu_id = gpu_id
+            self.image_size = image_size
 
-        if model_path is None:
-            raise ValueError('model_path is None')
-        if os.path.exists(model_path):
-            print(f'DeepDanbooru: Loading model from {model_path}')
-        else:
-            os.makedirs(os.path.dirname(model_path), exist_ok=True)
-            url = 'https://github.com/AUTOMATIC1111/TorchDeepDanbooru/releases/download/v1/model-resnet_custom_v3.pt'
-            print(f'DeepDanbooru: Downloading model {model_path}')
-            r = requests.get(url, allow_redirects=True)
-            open(model_path, 'wb').write(r.content)
+            if model_path is None:
+                raise ValueError('model_path is None')
+            if os.path.exists(model_path):
+                print(f'DeepDanbooru: Loading model from {model_path}')
+            else:
+                os.makedirs(os.path.dirname(model_path), exist_ok=True)
+                url = 'https://github.com/AUTOMATIC1111/TorchDeepDanbooru/releases/download/v1/model-resnet_custom_v3.pt'
+                print(f'DeepDanbooru: Downloading model {model_path}')
+                r = requests.get(url, allow_redirects=True)
+                open(model_path, 'wb').write(r.content)
 
 
-        self.device = torch.device('cuda')
-        print(f'DeepDanbooru: Using device {self.device}')
-        self.model = DeepDanbooruModel()
-        self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
+            self.device = torch.device('cuda')
+            print(f'DeepDanbooru: Using device {self.device}')
+            self.model = DeepDanbooruModel()
+            self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
 
-        self.model.eval()
-        if self.half:
-            self.model.half()
-        self.model = self.model.to(self.device)
-        print(f'DeepDanbooru: Model loaded')
+            self.model.eval()
+            if self.half:
+                self.model.half()
+            self.model = self.model.to(self.device)
+            print(f'DeepDanbooru: Model loaded')
+        except Exception as e:
+            print(f'Initiate DeepDanbooru failed: {e}')
+            raise e
 
     def get_tag(self, pil_image):
-        threshold = 0.7
-        use_spaces = True
-        use_escape = True
-        alpha_sort = True
-        include_ranks = False
+        try:
+            threshold = 0.7
+            use_spaces = True
+            use_escape = True
+            alpha_sort = True
+            include_ranks = False
 
-        pic = resize_image(pil_image.convert("RGB"), 512, 512)
-        a = np.expand_dims(np.array(pic, dtype=np.float32), 0) / 255
+            pic = resize_image(pil_image.convert("RGB"), 512, 512)
+            a = np.expand_dims(np.array(pic, dtype=np.float32), 0) / 255
 
-        with torch.no_grad(), autocast("cuda"):
-            x = torch.from_numpy(a).to(self.device)
-            y = self.model(x).cpu().numpy()[0]
-        torch.cuda.empty_cache()
+            with torch.no_grad(), autocast("cuda"):
+                x = torch.from_numpy(a).to(self.device)
+                y = self.model(x).cpu().numpy()[0]
+            torch.cuda.empty_cache()
 
-        probability_dict = {}
+            probability_dict = {}
 
-        for tag, probability in zip(self.model.tags, y):
-            if probability < threshold:
-                continue
+            for tag, probability in zip(self.model.tags, y):
+                if probability < threshold:
+                    continue
 
-            if tag.startswith("rating:"):
-                continue
+                if tag.startswith("rating:"):
+                    continue
 
-            probability_dict[tag] = probability
+                probability_dict[tag] = probability
 
-        if alpha_sort:
-            tags = sorted(probability_dict)
-        else:
-            tags = [tag for tag, _ in sorted(probability_dict.items(), key=lambda x: -x[1])]
+            if alpha_sort:
+                tags = sorted(probability_dict)
+            else:
+                tags = [tag for tag, _ in sorted(probability_dict.items(), key=lambda x: -x[1])]
 
-        res = []
+            res = []
 
-        for tag in tags:
-            probability = probability_dict[tag]
-            tag_outformat = tag
-            if use_spaces:
-                tag_outformat = tag_outformat.replace('_', ' ')
-            if use_escape:
-                tag_outformat = re.sub(re_special, r'\\\1', tag_outformat)
-            if include_ranks:
-                tag_outformat = f"({tag_outformat}:{probability:.3f})"
+            for tag in tags:
+                probability = probability_dict[tag]
+                tag_outformat = tag
+                if use_spaces:
+                    tag_outformat = tag_outformat.replace('_', ' ')
+                if use_escape:
+                    tag_outformat = re.sub(re_special, r'\\\1', tag_outformat)
+                if include_ranks:
+                    tag_outformat = f"({tag_outformat}:{probability:.3f})"
 
-            res.append(tag_outformat)
+                res.append(tag_outformat)
 
-        return ", ".join(res)
-        
+            return ", ".join(res)
+        except Exception as e:
+            torch.cuda.empty_cache()
+            print(f'DeepDanbooru: Error: {e}')
+            return ''
+            
 
 
-def resize_image(im, width, height):    
+def resize_image(im, width, height):
     ratio = width / height
     src_ratio = im.width / im.height
 
