@@ -5,12 +5,12 @@ import requests
 import numpy as np
 import torch
 from torch import autocast
-import DeepDanbooruModel
+from .deep_danbooru_model import DeepDanbooruModel
 
 re_special = re.compile(r'([\\()])')
 
 class DeepDanbooru:
-    def __init__(self, model_path, half=True, gpu_id=0, image_size=768):
+    def __init__(self, model_path, half=True, gpu_id=0, image_size=512):
         self.model_path = model_path
         self.half = half
         self.gpu_id = gpu_id
