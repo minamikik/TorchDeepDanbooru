@@ -19,14 +19,14 @@ class DeepDanbooru:
 
             if model_path is None:
                 raise ValueError('model_path is None')
-            if os.path.exists(model_path):
-                print(f'DeepDanbooru: Loading model from {model_path}')
+            if os.path.exists(self.model_path):
+                print(f'DeepDanbooru: Loading model from {self.model_path}')
             else:
-                os.makedirs(os.path.dirname(model_path), exist_ok=True)
+                os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
                 url = 'https://github.com/AUTOMATIC1111/TorchDeepDanbooru/releases/download/v1/model-resnet_custom_v3.pt'
-                print(f'DeepDanbooru: Downloading model {model_path}')
+                print(f'DeepDanbooru: Downloading model {self.model_path}')
                 r = requests.get(url, allow_redirects=True)
-                open(model_path, 'wb').write(r.content)
+                open(self.model_path, 'wb').write(r.content)
 
 
             self.device = torch.device('cuda')
