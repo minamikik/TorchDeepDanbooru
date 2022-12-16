@@ -62,7 +62,8 @@ class DeepDanbooru:
             probability_dict = {}
 
             for tag, probability in zip(self.model.tags, y):
-                print(f'{tag}: {probability:.3f}')
+                if not probability < ( threshold / 2 ):
+                    print(f'{tag}: {probability:.3f}')
                 if probability < threshold:
                     continue
 
