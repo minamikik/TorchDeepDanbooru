@@ -62,13 +62,15 @@ class DeepDanbooru:
             probability_dict = {}
 
             for tag, probability in zip(self.model.tags, y):
+                if tag.startswith("rating:") or tag.startswith("black_border:") or tag.startswith("letterboxed:") or tag.startswith("pillarboxed:") or tag.startswith("tokyo_(city):"):
+                    continue
+
                 if not probability < ( threshold / 2 ):
                     print(f'{tag}: {probability:.3f}')
+                    
                 if probability < threshold:
                     continue
 
-                if tag.startswith("rating:"):
-                    continue
 
                 probability_dict[tag] = probability
 
