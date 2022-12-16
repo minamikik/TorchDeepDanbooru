@@ -65,12 +65,15 @@ class DeepDanbooru:
             for tag, probability in zip(self.model.tags, y):
                 if tag.startswith("rating:") or tag.startswith("black_border") or tag.startswith("letterboxed") or tag.startswith("pillarboxed") or tag.startswith("tokyo_(city)"):
                     continue
-                elif probability < threshold:
+
+                if probability < 0.5:
+                    continue
+                if probability < threshold:
                     print(f'DeepDanbooru: Possible tag (-): {tag}: {probability:.3f}')
                     continue
-                else:
-                    print(f'DeepDanbooru: Possible tag (+): {tag}: {probability:.3f}')
-                    probability_dict[tag] = probability
+
+                print(f'DeepDanbooru: Possible tag (+): {tag}: {probability:.3f}')
+                probability_dict[tag] = probability
 
             if alpha_sort:
                 tags = sorted(probability_dict)
