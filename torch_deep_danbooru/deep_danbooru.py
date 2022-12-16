@@ -65,9 +65,9 @@ class DeepDanbooru:
                 if tag.startswith("rating:") or tag.startswith("black_border:") or tag.startswith("letterboxed:") or tag.startswith("pillarboxed:") or tag.startswith("tokyo_(city):"):
                     continue
 
-                if not probability < ( threshold / 2 ):
-                    print(f'{tag}: {probability:.3f}')
-                    
+                if not probability < 0.5:
+                    print(f'Possible tag: {tag}: {probability:.3f}')
+
                 if probability < threshold:
                     continue
 
