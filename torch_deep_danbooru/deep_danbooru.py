@@ -43,9 +43,9 @@ class DeepDanbooru:
             print(f'Initiate DeepDanbooru failed: {e}')
             raise e
 
-    def get_tag(self, pil_image):
+    def get_tag(self, pil_image, threshold):
         try:
-            threshold = 0.7
+            threshold = threshold
             use_spaces = True
             use_escape = True
             alpha_sort = True
@@ -62,6 +62,7 @@ class DeepDanbooru:
             probability_dict = {}
 
             for tag, probability in zip(self.model.tags, y):
+                print(f'{tag}: {probability:.3f}')
                 if probability < threshold:
                     continue
 
