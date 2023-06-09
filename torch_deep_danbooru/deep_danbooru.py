@@ -10,7 +10,7 @@ from .deep_danbooru_model import DeepDanbooruModel
 re_special = re.compile(r'([\\()])')
 
 class DeepDanbooru:
-    def __init__(self, model_path, half=True, gpu_id=0, image_size=512):
+    def __init__(self, model_path, half=True, gpu_id=0, image_size=512, device='cuda'):
         try:
             self.model_path = model_path
             self.half = half
@@ -29,7 +29,7 @@ class DeepDanbooru:
                 open(self.model_path, 'wb').write(r.content)
 
 
-            self.device = torch.device('cuda')
+            self.device = device
             print(f'DeepDanbooru: Using device {self.device}')
             self.model = DeepDanbooruModel()
             self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
